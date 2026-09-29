@@ -1,5 +1,6 @@
 package br.edu.ifpb.pweb2.spendwise.controller;
 
+import br.edu.ifpb.pweb2.spendwise.model.Comentario;
 import br.edu.ifpb.pweb2.spendwise.model.Conta;
 import br.edu.ifpb.pweb2.spendwise.model.Correntista;
 import br.edu.ifpb.pweb2.spendwise.service.CategoriaService;
@@ -7,6 +8,7 @@ import br.edu.ifpb.pweb2.spendwise.service.ContaService;
 import br.edu.ifpb.pweb2.spendwise.service.CorrentistaService;
 import br.edu.ifpb.pweb2.spendwise.service.TransacaoService;
 import br.edu.ifpb.pweb2.spendwise.model.Transacao;
+import br.edu.ifpb.pweb2.spendwise.service.ComentarioService;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/correntista")
@@ -26,13 +29,14 @@ public class CorrentistaController {
     private final ContaService contaService;
     private final TransacaoService transacaoService;
     private final CategoriaService categoriaService;
+    private final ComentarioService comentarioService;
 
-    public CorrentistaController(CorrentistaService correntistaService, ContaService contaService, TransacaoService transacaoService, CategoriaService categoriaService) {
+    public CorrentistaController(CorrentistaService correntistaService, ContaService contaService, TransacaoService transacaoService, CategoriaService categoriaService, ComentarioService comentarioService) {
         this.correntistaService = correntistaService;
         this.contaService = contaService;
         this.transacaoService = transacaoService;
         this.categoriaService = categoriaService;
-
+        this.comentarioService = comentarioService;
     }
 
     @GetMapping("/{id}/cadastrar")
@@ -172,7 +176,11 @@ public class CorrentistaController {
 
             var transacao = transacaoService.buscarPorId(transacaoId);
 
+            Optional<Comentario> comentarioOpt = comentarioService.buscarPorTransacao(transacaoId);
+            String comentarioTexto = comentarioOpt.map(Comentario::getTexto).orElse("");
+
             model.addAttribute("transacaoForm", transacao);
+            model.addAttribute("comentarioTexto", comentarioTexto);
             model.addAttribute("conta", conta);
             model.addAttribute("correntistaId", correntistaId);
             model.addAttribute("categorias", categoriaService.listarAtivas());
@@ -185,19 +193,41 @@ public class CorrentistaController {
     }
 
     @PostMapping("/{correntistaId}/conta/{contaId}/transacao/{transacaoId}/editar")
-    public String salvarEdicaoTransacao(@PathVariable Long correntistaId, @PathVariable Long contaId, @PathVariable Long transacaoId, Transacao transacao, @RequestParam Long categoriaId, Model model) {
+        public String salvarEdicaoTransacao(@PathVariable Long correntistaId, 
+                                    @PathVariable Long contaId, 
+                                    @PathVariable Long transacaoId, 
+                                    Transacao transacao, 
+                                    @RequestParam Long categoriaId, 
+                                    @RequestParam(value = "comentarioTexto", required = false) String comentarioTexto,
+                                    Model model) {
         try {
             correntistaService.buscarPorId(correntistaId);
 
             var conta = contaService.buscarPorId(contaId);
-
             var categoria = categoriaService.buscarPorId(categoriaId);
 
             transacao.setId(transacaoId);
             transacao.setConta(conta);
             transacao.setCategoria(categoria);
 
+            // 1. Salva/Atualiza os dados da transação
             transacaoService.salvar(transacao);
+
+            // 2. Gerencia o comentário da transação
+            var comentarioOpt = comentarioService.buscarPorTransacao(transacaoId);
+
+            if (comentarioOpt.isPresent()) {
+                if (comentarioTexto == null || comentarioTexto.isBlank()) {
+                    // Se existia e o usuário limpou o texto, apaga do banco
+                    comentarioService.deletar(comentarioOpt.get().getId());
+                } else {
+                    // Se já existia e digitou algo, atualiza
+                    comentarioService.atualizar(comentarioOpt.get().getId(), comentarioTexto);
+                }
+            } else if (comentarioTexto != null && !comentarioTexto.isBlank()) {
+                // Se não existia e digitou algo, cria novo
+                comentarioService.salvar(transacaoId, comentarioTexto);
+            }
 
             return "redirect:/correntista/" + correntistaId + "/conta/" + contaId;
 
