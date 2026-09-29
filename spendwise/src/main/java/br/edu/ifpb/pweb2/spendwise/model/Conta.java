@@ -3,6 +3,8 @@ package br.edu.ifpb.pweb2.spendwise.model;
 import br.edu.ifpb.pweb2.spendwise.enums.TipoConta;
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "contas")
@@ -24,6 +26,10 @@ public class Conta {
     private TipoConta tipo;
 
     private Integer diaFechamento;
+
+    @OneToMany(mappedBy = "conta")
+    @Builder.Default
+    private List<Transacao> transacoes = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "correntista_id")

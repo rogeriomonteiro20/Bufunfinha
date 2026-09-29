@@ -25,4 +25,14 @@ public class ContaService {
         return contaRepository.findByCorrentistaId(correntistaId);
     }
 
+    public Conta buscarPorId(Long id) {
+
+        var conta = contaRepository.findById(id);
+
+        if (conta.isEmpty()) {
+            throw new IllegalArgumentException("Conta não encontrada.");
+        }
+
+        return conta.get();
+    }
 }
