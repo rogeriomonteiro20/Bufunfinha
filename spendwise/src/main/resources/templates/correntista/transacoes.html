@@ -8,164 +8,167 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<header class="w-full bg-white border-b border-gray-200">
+    <div class="px-6 py-4">
+        <a href="/" class="text-2xl font-bold text-blue-600 hover:text-blue-700 transition">
+            Bufunfinha
+        </a>
+    </div>
+</header>
 
 <body class="bg-gray-100 min-h-screen">
 
-<div class="max-w-5xl mx-auto px-6 py-12">
 
-    <div class="flex items-center justify-between mb-8">
 
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">
-                Transações
-            </h1>
+    <div class="max-w-5xl mx-auto px-6 py-12">
 
-            <p class="text-gray-500 mt-1">
-                Conta:
-                <span class="font-medium text-gray-700"
-                      th:text="${conta.descricao}">
-                    Minha conta
-                </span>
-            </p>
-        </div>
+        <div class="flex items-center justify-between mb-8">
+            <div>
 
-        <a th:href="@{/correntista/{correntistaId}/conta/{contaId}/transacao/cadastrar(
+                <h1 class="text-2xl font-bold text-gray-800">
+                    Transações
+                </h1>
+
+                <p class="text-gray-500 mt-1">
+                    Conta:
+                    <span class="font-medium text-gray-700" th:text="${conta.descricao}">
+                        Minha conta
+                    </span>
+                </p>
+            </div>
+
+            <a th:href="@{/correntista/{correntistaId}/conta/{contaId}/transacao/cadastrar(
                     correntistaId=${correntistaId},
-                    contaId=${conta.id})}"
-           class="bg-blue-600 text-white px-5 py-3 rounded-lg
+                    contaId=${conta.id})}" class="bg-blue-600 text-white px-5 py-3 rounded-lg
                   hover:bg-blue-700 transition">
 
-            Nova transação
+                Nova transação
 
+            </a>
+
+        </div>
+        <a th:href="@{/correntista/{id}/contas(id=${correntistaId})}"
+            class="inline-block mb-3 text-blue-600 hover:text-blue-700 transition">
+            &larr; Voltar para contas
         </a>
 
-    </div>
 
+        <!-- Caso não existam transações -->
 
-    <!-- Caso não existam transações -->
+        <div th:if="${#lists.isEmpty(transacoes)}" class="bg-white rounded-xl shadow-sm p-10 text-center">
 
-    <div th:if="${#lists.isEmpty(transacoes)}"
-         class="bg-white rounded-xl shadow-sm p-10 text-center">
+            <h2 class="text-lg font-semibold text-gray-700">
+                Nenhuma transação cadastrada.
+            </h2>
 
-        <h2 class="text-lg font-semibold text-gray-700">
-            Nenhuma transação cadastrada.
-        </h2>
+            <p class="text-gray-500 mt-2">
+                Cadastre uma transação para começar a movimentar sua conta.
+            </p>
 
-        <p class="text-gray-500 mt-2">
-            Cadastre uma transação para começar a movimentar sua conta.
-        </p>
-
-        <a th:href="@{/correntista/{correntistaId}/conta/{contaId}/transacao/cadastrar(
+            <a th:href="@{/correntista/{correntistaId}/conta/{contaId}/transacao/cadastrar(
                     correntistaId=${correntistaId},
-                    contaId=${conta.id})}"
-           class="inline-block mt-6 bg-blue-600 text-white
+                    contaId=${conta.id})}" class="inline-block mt-6 bg-blue-600 text-white
                   px-5 py-3 rounded-lg hover:bg-blue-700 transition">
 
-            Cadastrar transação
+                Cadastrar transação
 
-        </a>
+            </a>
 
-    </div>
-
-
-    <!-- Lista de transações -->
-
-    <div th:unless="${#lists.isEmpty(transacoes)}"
-         class="bg-white rounded-xl shadow-sm overflow-hidden">
-
-        <div class="overflow-x-auto">
-
-            <table class="w-full">
-
-                <thead class="bg-gray-50 border-b">
-
-                <tr>
-
-                    <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">
-                        Descrição
-                    </th>
-
-                    <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">
-                        Valor
-                    </th>
-
-                    <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">
-                        Data
-                    </th>
-
-                    <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">
-                        Movimento
-                    </th>
-
-                    <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">
-                        Categoria
-                    </th>
-
-                    <th></th>
-
-                </tr>
-
-                </thead>
+        </div>
 
 
-                <tbody class="divide-y">
+        <!-- Lista de transações -->
 
-                <tr th:each="transacao : ${transacoes}"
-                    class="hover:bg-gray-50">
+        <div th:unless="${#lists.isEmpty(transacoes)}" class="bg-white rounded-xl shadow-sm overflow-hidden">
 
-                    <td class="px-6 py-4 text-gray-800"
-                        th:text="${transacao.descricao}">
-                        Compra
-                    </td>
+            <div class="overflow-x-auto">
 
-                    <td class="px-6 py-4 text-gray-800"
-                        th:text="${transacao.valor}">
-                        R$ 100,00
-                    </td>
+                <table class="w-full">
 
-                    <td class="px-6 py-4 text-gray-600"
-                        th:text="${transacao.data}">
-                        27/09/2026
-                    </td>
+                    <thead class="bg-gray-50 border-b">
 
-                    <td class="px-6 py-4 text-gray-600"
-                        th:text="${transacao.movimento}">
-                        SAIDA
-                    </td>
+                        <tr>
 
-                    <td class="px-6 py-4 text-gray-600"
-                        th:text="${transacao.categoria != null ? transacao.categoria.nome : 'Sem categoria'}">
-                        Alimentação
-                    </td>
+                            <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">
+                                Descrição
+                            </th>
 
-                    <!-- Caneta -->
+                            <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">
+                                Valor
+                            </th>
 
-                    <td class="px-6 py-4 text-right">
+                            <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">
+                                Data
+                            </th>
 
-                        <a th:href="@{/correntista/{correntistaId}/conta/{contaId}/transacao/{transacaoId}/editar(
+                            <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">
+                                Movimento
+                            </th>
+
+                            <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">
+                                Categoria
+                            </th>
+
+                            <th></th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody class="divide-y">
+
+                        <tr th:each="transacao : ${transacoes}" class="hover:bg-gray-50">
+
+                            <td class="px-6 py-4 text-gray-800" th:text="${transacao.descricao}">
+                                Compra
+                            </td>
+
+                            <td class="px-6 py-4 text-gray-800"
+                                th:text="${#numbers.formatDecimal(transacao.valor, 1, 'POINT', 2, 'COMMA')}">
+                                R$ 100,00
+                            </td>
+
+                            <td class="px-6 py-4 text-gray-600" th:text="${transacao.data}">
+                                27/09/2026
+                            </td>
+
+                            <td class="px-6 py-4 text-gray-600" th:text="${transacao.movimento}">
+                                SAIDA
+                            </td>
+
+                            <td class="px-6 py-4 text-gray-600"
+                                th:text="${transacao.categoria != null ? transacao.categoria.nome : 'Sem categoria'}">
+                                Alimentação
+                            </td>
+
+                            <!-- Caneta -->
+
+                            <td class="px-6 py-4 text-right">
+
+                                <a th:href="@{/correntista/{correntistaId}/conta/{contaId}/transacao/{transacaoId}/editar(
                                     correntistaId=${correntistaId},
                                     contaId=${conta.id},
-                                    transacaoId=${transacao.id})}"
-                           class="text-gray-400 hover:text-gray-700 transition"
-                           title="Editar">
+                                    transacaoId=${transacao.id})}" class="text-gray-400 hover:text-gray-700 transition"
+                                    title="Editar">
 
-                            ✎
+                                    ✎
 
-                        </a>
+                                </a>
 
-                    </td>
+                            </td>
 
-                </tr>
+                        </tr>
 
-                </tbody>
+                    </tbody>
 
-            </table>
+                </table>
+
+            </div>
 
         </div>
 
     </div>
-
-</div>
 
 </body>
 
