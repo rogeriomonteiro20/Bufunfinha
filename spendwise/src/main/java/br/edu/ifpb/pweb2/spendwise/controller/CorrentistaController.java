@@ -210,22 +210,20 @@ public class CorrentistaController {
             transacao.setConta(conta);
             transacao.setCategoria(categoria);
 
-            // 1. Salva/Atualiza os dados da transação
+
             transacaoService.salvar(transacao);
 
-            // 2. Gerencia o comentário da transação
             var comentarioOpt = comentarioService.buscarPorTransacao(transacaoId);
 
             if (comentarioOpt.isPresent()) {
                 if (comentarioTexto == null || comentarioTexto.isBlank()) {
-                    // Se existia e o usuário limpou o texto, apaga do banco
                     comentarioService.deletar(comentarioOpt.get().getId());
                 } else {
-                    // Se já existia e digitou algo, atualiza
+                    // atualiza
                     comentarioService.atualizar(comentarioOpt.get().getId(), comentarioTexto);
                 }
             } else if (comentarioTexto != null && !comentarioTexto.isBlank()) {
-                // Se não existia e digitou algo, cria novo
+                // se não existia, cria novo
                 comentarioService.salvar(transacaoId, comentarioTexto);
             }
 
