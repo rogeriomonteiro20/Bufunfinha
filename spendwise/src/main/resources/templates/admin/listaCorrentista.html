@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,80 +8,84 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<header class="w-full bg-white border-b border-gray-200">
+    <div class="px-6 py-4">
+        <a class="text-2xl font-bold text-blue-600 hover:text-blue-700 transition">
+            Bufunfinha
+        </a>
+    </div>
+</header>
 
 <body class="bg-gray-100 min-h-screen">
 
-<div class="max-w-5xl mx-auto px-6 py-12">
+    <div class="max-w-5xl mx-auto px-6 py-12">
 
-    <div class="bg-white rounded-xl shadow-sm">
+        <div class="bg-white rounded-xl shadow-sm">
 
-        <div class="p-8 border-b border-gray-200 flex items-center justify-between">
+            <div class="p-8 border-b border-gray-200 flex items-center justify-between">
 
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800">
-                    Correntistas
-                </h1>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">
+                        Correntistas
+                    </h1>
 
-                <p class="text-gray-500 mt-1">
-                    Lista de correntistas cadastrados.
-                </p>
+                    <p class="text-gray-500 mt-1">
+                        Lista de correntistas cadastrados.
+                    </p>
+                </div>
+
+                <a href="/admin/cadastrar" class="bg-blue-600 text-white px-5 py-3 rounded-lg
+                      font-medium hover:bg-blue-700 transition">
+                    + Novo correntista
+                </a>
+
             </div>
 
-            <a href="/admin/cadastrar"
-               class="bg-blue-600 text-white px-5 py-3 rounded-lg
-                      font-medium hover:bg-blue-700 transition">
-                + Novo correntista
-            </a>
+            <div class="overflow-x-auto">
 
-        </div>
+                <table class="w-full">
 
-        <div class="overflow-x-auto">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="text-left px-8 py-4 text-sm font-semibold text-gray-600">
+                                ID
+                            </th>
 
-            <table class="w-full">
+                            <th class="text-left px-8 py-4 text-sm font-semibold text-gray-600">
+                                Nome
+                            </th>
+                        </tr>
+                    </thead>
 
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="text-left px-8 py-4 text-sm font-semibold text-gray-600">
-                            ID
-                        </th>
+                    <tbody>
 
-                        <th class="text-left px-8 py-4 text-sm font-semibold text-gray-600">
-                            Nome
-                        </th>
-                    </tr>
-                </thead>
+                        <tr th:each="correntista : ${correntistas}"
+                            class="border-t border-gray-100 hover:bg-gray-50 transition">
 
-                <tbody>
+                            <td class="px-8 py-4 text-gray-500" th:text="${correntista.id}">
+                            </td>
 
-                    <tr th:each="correntista : ${correntistas}"
-                        class="border-t border-gray-100 hover:bg-gray-50 transition">
+                            <td class="px-8 py-4 font-medium text-gray-800" th:text="${correntista.nome}">
+                            </td>
 
-                        <td class="px-8 py-4 text-gray-500"
-                            th:text="${correntista.id}">
-                        </td>
+                        </tr>
 
-                        <td class="px-8 py-4 font-medium text-gray-800"
-                            th:text="${correntista.nome}">
-                        </td>
+                        <tr th:if="${#lists.isEmpty(correntistas)}">
+                            <td colspan="2" class="px-8 py-12 text-center text-gray-500">
+                                Nenhum correntista cadastrado.
+                            </td>
+                        </tr>
 
-                    </tr>
+                    </tbody>
 
-                    <tr th:if="${#lists.isEmpty(correntistas)}">
-                        <td colspan="2"
-                            class="px-8 py-12 text-center text-gray-500">
-                            Nenhum correntista cadastrado.
-                        </td>
-                    </tr>
+                </table>
 
-                </tbody>
-
-            </table>
+            </div>
 
         </div>
 
     </div>
 
-</div>
-
 </body>
+
 </html>

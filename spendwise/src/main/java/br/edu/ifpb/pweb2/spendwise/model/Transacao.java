@@ -8,6 +8,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.NumberFormat;
+
 @Entity
 @Table(name = "transacoes")
 @Data
@@ -22,8 +25,10 @@ public class Transacao {
 
     private String descricao;
 
+    @NumberFormat (pattern = "#,##0.00")
     private BigDecimal valor;
 
+    @DateTimeFormat (pattern = "yyyy-MM-dd")
     private LocalDate data;
 
     private String movimento;
