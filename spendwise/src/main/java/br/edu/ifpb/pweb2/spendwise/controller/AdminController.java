@@ -1,14 +1,16 @@
 package br.edu.ifpb.pweb2.spendwise.controller;
 
-import br.edu.ifpb.pweb2.spendwise.model.Correntista;
-import br.edu.ifpb.pweb2.spendwise.repository.CorrentistaRepository;
-import br.edu.ifpb.pweb2.spendwise.service.CorrentistaService;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import br.edu.ifpb.pweb2.spendwise.model.Correntista;
+import br.edu.ifpb.pweb2.spendwise.service.CorrentistaService;
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/admin")
@@ -33,7 +35,10 @@ public class AdminController {
     }
 
     @PostMapping("/cadastrar")
-    public String salvarCorrentista(Correntista correntista, Model model) {
+    public String salvarCorrentista(@Valid @ModelAttribute("correntistaForm") Correntista correntista, BindingResult bindingResult, Model model) {
+        if (bindingResult.hasErrors()) {
+            return "admin/cadastroCorrentista";
+        }
         try {
             correntistaService.salvar(correntista);
 

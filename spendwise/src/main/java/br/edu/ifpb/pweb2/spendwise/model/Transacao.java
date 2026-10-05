@@ -1,6 +1,12 @@
 package br.edu.ifpb.pweb2.spendwise.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -23,20 +29,25 @@ public class Transacao {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "A descrição é obrigatória")
     private String descricao;
 
-    @NumberFormat (pattern = "#,##0.00")
+    @NotNull(message = "Valor obrigatório")
+    @Positive (message = "O valor deve ser maior que zero")
     private BigDecimal valor;
 
+    @NotNull(message = "Data obrigatória")
     @DateTimeFormat (pattern = "yyyy-MM-dd")
     private LocalDate data;
 
+    @NotEmpty (message = "Movimento obrigatório")
     private String movimento;
 
     @ManyToOne
     @JoinColumn(name = "conta_id")
     private Conta conta;
 
+    @Valid 
     @ManyToOne
     @JoinColumn(name = "categoria_id")
     private Categoria categoria;
