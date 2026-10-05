@@ -46,7 +46,13 @@ public class CorrentistaController {
     }
 
     @PostMapping("/{id}/cadastrar")
-    public String cadastrarConta(@PathVariable Long id, Conta conta, Model model) {
+    public String cadastrarConta(@PathVariable Long id,@Valid @ModelAttribute("contaForm") Conta conta, BindingResult bindingResult, Model model) {
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("id", id);
+            return "correntista/cadastroConta";
+        }
+
         try {
             var correntista = correntistaService.buscarPorId(id);
 
