@@ -12,7 +12,9 @@ import br.edu.ifpb.pweb2.spendwise.service.ComentarioService;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,7 +50,13 @@ public class CorrentistaController {
     }
 
     @PostMapping("/{id}/cadastrar")
-    public String cadastrarConta(@PathVariable Long id, Conta conta, Model model) {
+    public String cadastrarConta(@PathVariable Long id,@Valid @ModelAttribute("contaForm") Conta conta, BindingResult bindingResult, Model model) {
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("id", id);
+            return "correntista/cadastroConta";
+        }
+
         try {
             var correntista = correntistaService.buscarPorId(id);
 
@@ -137,7 +145,18 @@ public class CorrentistaController {
     }
 
     @PostMapping("/{correntistaId}/conta/{contaId}/transacao/cadastrar")
-    public String salvarTransacao( @PathVariable Long correntistaId, @PathVariable Long contaId, Transacao transacao, @RequestParam Long categoriaId, Model model) {
+    public String salvarTransacao(@PathVariable Long correntistaId, @PathVariable Long contaId, @Valid @ModelAttribute("transacaoForm") Transacao transacao, BindingResult bindingResult, @RequestParam(required = false) Long categoriaId, Model model) {
+        if (categoriaId == null) {
+            bindingResult.rejectValue("categoria", "NotNull", "Categoria obrigatória!");
+        }
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("conta", contaService.buscarPorId(contaId));
+            model.addAttribute("correntistaId", correntistaId);
+            model.addAttribute("categorias", categoriaService.listarAtivas());
+            return "correntista/cadastroTransacao";
+        }
+        
         try {
             correntistaService.buscarPorId(correntistaId);
 
@@ -206,9 +225,8 @@ public class CorrentistaController {
             var conta = contaService.buscarPorId(contaId);
             var categoria = categoriaService.buscarPorId(categoriaId);
 
-            transacao.setId(transacaoId);
-            transacao.setConta(conta);
-            transacao.setCategoria(categoria);
+        return "correntista/editarTransacao";
+    }
 
 
             transacaoService.salvar(transacao);
@@ -229,15 +247,26 @@ public class CorrentistaController {
 
             return "redirect:/correntista/" + correntistaId + "/conta/" + contaId;
 
-        } catch (IllegalArgumentException e) {
+        transacao.setId(transacaoId);
+        transacao.setConta(conta);
+        transacao.setCategoria(categoria);
 
-            model.addAttribute("erro", e.getMessage());
-            model.addAttribute("transacaoForm", transacao);
-            model.addAttribute("conta", contaService.buscarPorId(contaId));
-            model.addAttribute("correntistaId", correntistaId);
-            model.addAttribute("categorias", categoriaService.listarAtivas());
+        transacaoService.salvar(transacao);
 
-            return "correntista/editarTransacao";
-        }
+        return "redirect:/correntista/"
+                + correntistaId
+                + "/conta/"
+                + contaId;
+
+    } catch (IllegalArgumentException e) {
+
+        model.addAttribute("erro", e.getMessage());
+        model.addAttribute("transacaoForm", transacao);
+        model.addAttribute("conta", contaService.buscarPorId(contaId));
+        model.addAttribute("correntistaId", correntistaId);
+        model.addAttribute("categorias", categoriaService.listarAtivas());
+
+        return "correntista/editarTransacao";
     }
+}
 }
