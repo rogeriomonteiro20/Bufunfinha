@@ -1,31 +1,32 @@
 package br.edu.ifpb.pweb2.spendwise.controller;
 
-import br.edu.ifpb.pweb2.spendwise.model.Comentario;
-import br.edu.ifpb.pweb2.spendwise.model.Conta;
-import br.edu.ifpb.pweb2.spendwise.model.Correntista;
-import br.edu.ifpb.pweb2.spendwise.service.CategoriaService;
-import br.edu.ifpb.pweb2.spendwise.service.ContaService;
-import br.edu.ifpb.pweb2.spendwise.service.CorrentistaService;
-import br.edu.ifpb.pweb2.spendwise.service.TransacaoService;
-import br.edu.ifpb.pweb2.spendwise.model.Transacao;
-import br.edu.ifpb.pweb2.spendwise.service.ComentarioService;
+import java.util.List;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
-import java.util.Optional;
+import br.edu.ifpb.pweb2.spendwise.model.Conta;
+import br.edu.ifpb.pweb2.spendwise.model.Transacao;
+import br.edu.ifpb.pweb2.spendwise.service.CategoriaService;
+import br.edu.ifpb.pweb2.spendwise.service.ComentarioService;
+import br.edu.ifpb.pweb2.spendwise.service.ContaService;
+import br.edu.ifpb.pweb2.spendwise.service.CorrentistaService;
+import br.edu.ifpb.pweb2.spendwise.service.TransacaoService;
+import jakarta.validation.Valid;
+
 
 @Controller
 @RequestMapping("/correntista")
 public class CorrentistaController {
 
-    private final CorrentistaService correntistaService;
+     private final CorrentistaService correntistaService;
     private final ContaService contaService;
     private final TransacaoService transacaoService;
     private final CategoriaService categoriaService;
@@ -48,7 +49,13 @@ public class CorrentistaController {
     }
 
     @PostMapping("/{id}/cadastrar")
-    public String cadastrarConta(@PathVariable Long id, Conta conta, Model model) {
+    public String cadastrarConta(@PathVariable Long id,@Valid @ModelAttribute("contaForm") Conta conta, BindingResult bindingResult, Model model) {
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("id", id);
+            return "correntista/cadastroConta";
+        }
+
         try {
             var correntista = correntistaService.buscarPorId(id);
 
@@ -137,12 +144,28 @@ public class CorrentistaController {
     }
 
     @PostMapping("/{correntistaId}/conta/{contaId}/transacao/cadastrar")
-    public String salvarTransacao( @PathVariable Long correntistaId, @PathVariable Long contaId, Transacao transacao, @RequestParam Long categoriaId, Model model) {
+    public String salvarTransacao(@PathVariable Long correntistaId,
+                                 @PathVariable Long contaId,
+                                 @Valid @ModelAttribute("transacaoForm") Transacao transacao,
+                                 BindingResult bindingResult,
+                                 @RequestParam(required = false) Long categoriaId,
+                                 @RequestParam(value = "comentarioTexto", required = false) String comentarioTexto,
+                                 Model model) {
+        if (categoriaId == null) {
+            bindingResult.rejectValue("categoria", "NotNull", "Categoria obrigatória!");
+        }
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("conta", contaService.buscarPorId(contaId));
+            model.addAttribute("correntistaId", correntistaId);
+            model.addAttribute("categorias", categoriaService.listarAtivas());
+            return "correntista/cadastroTransacao";
+        }
+
         try {
             correntistaService.buscarPorId(correntistaId);
 
             var conta = contaService.buscarPorId(contaId);
-
             var categoria = categoriaService.buscarPorId(categoriaId);
 
             transacao.setId(null);
@@ -150,6 +173,10 @@ public class CorrentistaController {
             transacao.setCategoria(categoria);
 
             transacaoService.salvar(transacao);
+
+            if (comentarioTexto != null && !comentarioTexto.isBlank()) {
+                comentarioService.salvar(transacao.getId(), comentarioTexto);
+            }
 
             return "redirect:/correntista/"
                     + correntistaId
@@ -173,17 +200,14 @@ public class CorrentistaController {
             correntistaService.buscarPorId(correntistaId);
 
             var conta = contaService.buscarPorId(contaId);
-
             var transacao = transacaoService.buscarPorId(transacaoId);
-
-            Optional<Comentario> comentarioOpt = comentarioService.buscarPorTransacao(transacaoId);
-            String comentarioTexto = comentarioOpt.map(Comentario::getTexto).orElse("");
+            var comentario = comentarioService.buscarPorTransacao(transacaoId);
 
             model.addAttribute("transacaoForm", transacao);
-            model.addAttribute("comentarioTexto", comentarioTexto);
             model.addAttribute("conta", conta);
             model.addAttribute("correntistaId", correntistaId);
             model.addAttribute("categorias", categoriaService.listarAtivas());
+            model.addAttribute("comentarioTexto", comentario.map(comentarioAtual -> comentarioAtual.getTexto()).orElse(""));
 
             return "correntista/editarTransacao";
 
@@ -192,52 +216,64 @@ public class CorrentistaController {
         }
     }
 
-    @PostMapping("/{correntistaId}/conta/{contaId}/transacao/{transacaoId}/editar")
-        public String salvarEdicaoTransacao(@PathVariable Long correntistaId, 
-                                    @PathVariable Long contaId, 
-                                    @PathVariable Long transacaoId, 
-                                    Transacao transacao, 
-                                    @RequestParam Long categoriaId, 
-                                    @RequestParam(value = "comentarioTexto", required = false) String comentarioTexto,
-                                    Model model) {
-        try {
-            correntistaService.buscarPorId(correntistaId);
+@PostMapping("/{correntistaId}/conta/{contaId}/transacao/{transacaoId}/editar")
+public String salvarEdicaoTransacao(
+        @PathVariable Long correntistaId,
+        @PathVariable Long contaId,
+        @PathVariable Long transacaoId,
+        @Valid @ModelAttribute("transacaoForm") Transacao transacao,
+        BindingResult bindingResult,
+        @RequestParam(required = false) Long categoriaId,
+        @RequestParam(value = "comentarioTexto", required = false) String comentarioTexto,
+        Model model) {
 
-            var conta = contaService.buscarPorId(contaId);
-            var categoria = categoriaService.buscarPorId(categoriaId);
-
-            transacao.setId(transacaoId);
-            transacao.setConta(conta);
-            transacao.setCategoria(categoria);
-
-
-            transacaoService.salvar(transacao);
-
-            var comentarioOpt = comentarioService.buscarPorTransacao(transacaoId);
-
-            if (comentarioOpt.isPresent()) {
-                if (comentarioTexto == null || comentarioTexto.isBlank()) {
-                    comentarioService.deletar(comentarioOpt.get().getId());
-                } else {
-                    // atualiza
-                    comentarioService.atualizar(comentarioOpt.get().getId(), comentarioTexto);
-                }
-            } else if (comentarioTexto != null && !comentarioTexto.isBlank()) {
-                // se não existia, cria novo
-                comentarioService.salvar(transacaoId, comentarioTexto);
-            }
-
-            return "redirect:/correntista/" + correntistaId + "/conta/" + contaId;
-
-        } catch (IllegalArgumentException e) {
-
-            model.addAttribute("erro", e.getMessage());
-            model.addAttribute("transacaoForm", transacao);
-            model.addAttribute("conta", contaService.buscarPorId(contaId));
-            model.addAttribute("correntistaId", correntistaId);
-            model.addAttribute("categorias", categoriaService.listarAtivas());
-
-            return "correntista/editarTransacao";
-        }
+    if (categoriaId == null) {
+        bindingResult.rejectValue("categoria", "NotNull", "Categoria obrigatória!");
     }
-}
+
+    if (bindingResult.hasErrors()) {
+        transacao.setId(transacaoId);
+
+        model.addAttribute("conta", contaService.buscarPorId(contaId));
+        model.addAttribute("correntistaId", correntistaId);
+        model.addAttribute("categorias", categoriaService.listarAtivas());
+
+        return "correntista/editarTransacao";
+    }
+
+    try {
+        correntistaService.buscarPorId(correntistaId);
+
+        var conta = contaService.buscarPorId(contaId);
+        var categoria = categoriaService.buscarPorId(categoriaId);
+
+        transacao.setId(transacaoId);
+        transacao.setConta(conta);
+        transacao.setCategoria(categoria);
+
+        transacaoService.salvar(transacao);
+
+        var comentarioOpt = comentarioService.buscarPorTransacao(transacaoId);
+
+        if (comentarioOpt.isPresent()) {
+            if (comentarioTexto == null || comentarioTexto.isBlank()) {
+                comentarioService.deletar(comentarioOpt.get().getId());
+            } else {
+                comentarioService.atualizar(comentarioOpt.get().getId(), comentarioTexto);
+            }
+        } else if (comentarioTexto != null && !comentarioTexto.isBlank()) {
+            comentarioService.salvar(transacaoId, comentarioTexto);
+        }
+
+        return "redirect:/correntista/" + correntistaId + "/conta/" + contaId;
+
+    } catch (IllegalArgumentException e) {
+        model.addAttribute("erro", e.getMessage());
+        model.addAttribute("transacaoForm", transacao);
+        model.addAttribute("conta", contaService.buscarPorId(contaId));
+        model.addAttribute("correntistaId", correntistaId);
+        model.addAttribute("categorias", categoriaService.listarAtivas());
+
+        return "correntista/editarTransacao";
+    }
+}}
