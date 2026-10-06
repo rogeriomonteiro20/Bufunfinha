@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Correntista</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<header class="w-full bg-white border-b border-gray-200">
+    <div class="px-6 py-4">
+        <a class="text-2xl font-bold text-blue-600 hover:text-blue-700 transition">
+            Bufunfinha
+        </a>
+    </div>
+</header>
+
+<body class="bg-gray-100 min-h-screen">
+
+    <div class="max-w-2xl mx-auto px-6 py-12">
+
+        <div class="bg-white rounded-xl shadow-sm p-8">
+
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-gray-800">
+                    Cadastrar Correntista
+                </h1>
+
+                <p class="text-gray-500 mt-1">
+                    Cadastre um novo correntista no sistema.
+                </p>
+            </div>
+            <div th:if="${erro}" class="mb-6 p-4 bg-red-100 border border-red-300 text-red-700 rounded-lg"
+                th:text="${erro}">
+            </div>
+            <form th:action="@{/admin/cadastrar}" th:object="${correntistaForm}" method="post" class="space-y-6">
+
+                <div>
+                    <label for="nome" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nome
+                    </label>
+
+                    <input type="text" id="nome" th:field="*{nome}" placeholder="Digite o nome do correntista" class="w-full px-4 py-3 border border-gray-300 rounded-lg
+                              focus:outline-none focus:ring-2 focus:ring-blue-500
+                              focus:border-blue-500" required>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 text-white font-medium py-3
+                           rounded-lg hover:bg-blue-700 transition">
+                    Cadastrar
+                </button>
+
+            </form>
+
+            <div class="mt-6 text-center">
+                <a href="/admin/correntistas" class="text-blue-600 hover:text-blue-800 text-sm">
+                    Ver correntistas cadastrados
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
